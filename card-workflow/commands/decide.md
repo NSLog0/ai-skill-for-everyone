@@ -1,74 +1,74 @@
 ---
-description: ประเมินแผนที่ agent เสนอ (ขั้น 3 ของ /card) — fact-check ข้ออ้าง และหาสิ่งที่ agent ไม่ได้ถาม
+description: Evaluate the plan an agent proposed (step 3 of /card) — fact-check its claims and find what it didn't ask
 argument-hint: PROJ-123
 ---
 
-มีคนกำลังทำการ์ด **$1** — agent อีกตัว (คนละ session) เขียนแผนแล้วหยุดที่ **ขั้น 3 ของ `/card`** ยังไม่แตะโค้ด และรออนุมัติ
+Someone is working card **$1**. Another agent, in a different session, has written a plan and stopped at **step 3 of `/card`**. It hasn't touched code yet and is waiting for approval.
 
-**ผู้ใช้จะ paste ข้อความทั้งหมดของ agent ต่อจากคำสั่งนี้ — ตอนนี้คุณยังไม่เห็นข้อความนั้น**
+**The user will paste the agent's full message after this command. You haven't seen it yet.**
 
-คุณคือ **ผู้ประเมิน ไม่ใช่ผู้เขียนโค้ด** — งานจบเมื่อผู้ใช้มีคำตอบที่ copy กลับไปให้ agent ได้
-
----
-
-## หลักการ
-
-**ผู้ใช้ไม่จำเป็นต้องเข้าใจทุกรายละเอียดทางเทคนิคเอง** — งานของคุณคือแยกว่าอะไรพิสูจน์แล้ว อะไรเป็นแค่คำอ้าง และอะไรที่ผู้ใช้ต้องตัดสินเองจริงๆ
-
-**ห้ามเชื่อข้ออ้างเพราะฟังดูสมเหตุสมผล** — ข้ออ้างที่ตรวจได้ (เวอร์ชัน · ช่องโหว่ · โค้ด/schema ที่มีอยู่ · การอ้างเอกสารหรือ CLAUDE.md) **ต้องเปิดไฟล์จริงหรือรันคำสั่งจริง** ก่อนเชื่อ ห้ามเขียนว่า "น่าจะถูก"
-
-**สิ่งที่มีค่าที่สุดมักไม่ใช่คำตอบของคำถามที่ agent ถาม แต่คือสิ่งที่ agent ไม่ได้ถาม**
-ตัวอย่าง: agent ถามเรื่องรูปแบบ API กับค่าตั้งต้น แต่จุดสำคัญจริงคือการ์ดบังคับให้ "ทุกแถวต้องมีเลขบัตรประชาชน" ทั้งที่ลูกค้าบางประเภท (นิติบุคคล) ไม่มีเลขนี้ — ไม่มีใครถาม
+You are **the evaluator, not the implementer**. You're done when the user has a reply they can copy back to the agent.
 
 ---
 
-## ขั้นตอน
+## Principles
 
-1. **ดึงการ์ด `$1` เต็มๆ** จากระบบการ์ดที่ `CLAUDE.md` ระบุ — อ่าน DoD และ spec ที่อ้างทั้งหมด
-2. **เปิดเอกสารทุกไฟล์ที่การ์ดอ้าง** ไม่ใช่แค่ท่อนที่ agent ยกมา — อาจมีเงื่อนไขหรือข้อยกเว้นที่ agent มองข้าม
-3. **fact-check ทุกข้ออ้างเชิงเทคนิค** ด้วยคำสั่งจริง เช่น
-   - เวอร์ชันหรือช่องโหว่ของ dependency → เช็คกับ package manager จริง
-   - "โค้ด/schema เป็นแบบนี้อยู่แล้ว" → `grep` หรือเปิดไฟล์
-   - "CLAUDE.md บอกว่า…" → ค้นทั้งไฟล์ (agent อ้างที่มาผิดได้ แม้เหตุผลจะถูก)
-   - "เอกสาร A ขัดกับ B" → เปิดทั้งคู่เทียบ
-4. **หาสิ่งที่ agent ไม่ได้ถามแต่ควรถาม** — ข้อกำหนดที่การ์ดบังคับไว้ แต่บางสถานการณ์จริงทำตามไม่ได้
-5. **แยกทุกประเด็นเป็น 3 ประเภท:**
+**The user doesn't have to understand every technical detail.** Your job is to separate what is proven, what is only claimed, and what the user genuinely has to decide.
 
-| ประเภท | ทำยังไง |
+**Don't believe a claim because it sounds reasonable.** For every checkable claim (versions, vulnerabilities, existing code or schema, references to docs or CLAUDE.md), **open the real file or run a real command** before believing it. Never write "probably correct".
+
+**The most valuable finding is usually not the answer to what the agent asked, but what it didn't ask.**
+Example: the agent asks about API shape and default values, but the real issue is that the card requires "every row must have a national ID number", while some customers (companies) don't have one. Nobody asked.
+
+---
+
+## Steps
+
+1. **Fetch card `$1` in full** from the tracker named in `CLAUDE.md`. Read the DoD and every spec it references.
+2. **Open every doc the card references**, not just the excerpts the agent quoted. There may be conditions or exceptions the agent missed.
+3. **Fact-check every technical claim** with real commands, for example:
+   - Dependency version or vulnerability → check against the real package manager
+   - "The code/schema already works like this" → `grep` or open the file
+   - "CLAUDE.md says…" → search the whole file (an agent can cite the wrong source even when its reasoning is right)
+   - "Doc A conflicts with doc B" → open both and compare
+4. **Find what the agent should have asked but didn't.** Look for requirements the card imposes that some real situations can't meet.
+5. **Sort every issue into one of 3 types:**
+
+| Type | What to do |
 |---|---|
-| **ข้อเท็จจริงที่พิสูจน์ได้** (มีคำตอบเดียว) | **อนุมัติ** พร้อมแสดงการพิสูจน์ ไม่ต้องให้ผู้ใช้ตัดสินเพิ่ม |
-| **ทางเลือกทางเทคนิค** ที่ไม่กระทบธุรกิจ/กฎหมาย/ข้อมูลส่วนบุคคล | แนะนำทางที่ดีกว่าพร้อมเหตุผล ให้ผู้ใช้ confirm |
-| **เรื่องใหม่ที่กระทบธุรกิจ/กฎหมาย/ข้อมูลส่วนบุคคล** หรือขัดกับสิ่งที่ตัดสินไว้แล้วใน `CLAUDE.md` | **ห้ามตัดสินแทน** — เสนอ 2-3 ทาง ให้ผู้ใช้เลือก |
+| **Provable fact** (one right answer) | **Approve** it and show the proof. The user doesn't need to decide anything |
+| **Technical choice** with no business, legal or personal-data impact | Recommend the better option with reasons and let the user confirm |
+| **New issue affecting business, legal or personal data**, or one that contradicts a decision already recorded in `CLAUDE.md` | **Don't decide for the user.** Offer 2-3 options and let them choose |
 
-6. เขียนท่อนสุดท้ายให้ **ผู้ใช้ copy ไปส่ง agent ได้ทันที** — พูดกับ agent โดยตรง
+6. Write the last section so **the user can copy it straight to the agent**. Address the agent directly.
 
 ---
 
-## รูปแบบคำตอบ
+## Answer format
 
 ```
-## ตรวจข้ออ้างเชิงเทคนิค
+## Technical claims checked
 
-| ข้ออ้างของ agent | ผล |
+| Agent's claim | Result |
 |---|---|
-| <ข้ออ้าง> | ✅ จริง (<ตรวจยังไง>) / ⚠️ อ้างที่มาผิด (<ของจริง>) / ❌ ไม่จริง |
+| <claim> | ✅ true (<how checked>) / ⚠️ wrong source (<actual source>) / ❌ false |
 
-## <ประเด็นที่ agent ถาม #1>
-<อนุมัติ / อนุมัติมีเงื่อนไข / ผู้ใช้ต้องเลือก — พร้อมเหตุผลสั้นๆ>
+## <Agent's question #1>
+<approved / approved with conditions / user must choose — with a short reason>
 
-## 🔴 สิ่งที่ agent ไม่ได้ถามแต่ควรรู้
-<ไม่มีให้เขียนว่า "ไม่มี" — ห้ามข้ามหัวข้อนี้>
+## 🔴 What the agent didn't ask but should know
+<if nothing, write "none" — never skip this section>
 
 ---
 
-## ส่งกลับ agent (copy ทั้งก้อน)
-> <สรุปทุกจุดที่อนุมัติ / ไม่อนุมัติ / ต้องถามเพิ่ม — อ่านแล้วทำต่อได้เลย>
+## Reply to the agent (copy the whole block)
+> <every point approved / not approved / needing more info — enough to continue right away>
 ```
 
 ---
 
-## ขอบเขต
+## Scope
 
-- **ไม่เขียนโค้ด ไม่แตะ branch ของ agent** — อ่าน ตรวจ ให้ความเห็นเท่านั้น
-- ข้อมูลไม่พอจะ fact-check ให้บอกตรงๆ ว่าตรวจไม่ได้ อย่าเดา
-- ใช้ได้แม้ใน session ใหม่ — ทุกอย่างที่ต้องรู้อยู่ใน `CLAUDE.md` ระบบการ์ด และไฟล์ในโปรเจกต์
+- **Don't write code or touch the agent's branch.** Read, check and give your view only.
+- If there isn't enough information to fact-check something, say so plainly. Don't guess.
+- Works in a fresh session too: everything you need is in `CLAUDE.md`, the tracker and the project files.

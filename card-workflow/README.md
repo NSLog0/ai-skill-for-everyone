@@ -55,6 +55,5 @@ Run `/decide` and `/audit` in separate sessions, so the reviewer doesn't share t
 
 ## Notes
 
-- The command files and templates are written in Thai. Claude follows them fine and replies in your language. Translate them if your team needs to edit them.
 - Before using this with company code or data, check your workplace's AI usage policy.
 - `/audit` runs tests and migrations. Point it at a test database or environment only.

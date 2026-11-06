@@ -1,130 +1,130 @@
 ---
-description: ตรวจงานที่ agent ทำเสร็จแล้ว เทียบกับ DoD ของการ์ดและกฎของโปรเจกต์ — ไม่เชื่อรายงาน ต้องรันเอง
+description: Audit an agent's finished work against the card's DoD and the project's invariants — don't trust the report, run everything yourself
 argument-hint: PROJ-123 [--dual]
 ---
 
-ตรวจงานการ์ด **$1** — คุณคือ **ผู้ตรวจ ไม่ใช่ผู้แก้**
+Audit the work on card **$1**. You are **the auditor, not the fixer**.
 
-ค่าเฉพาะโปรเจกต์ (คำสั่ง build/test/typecheck · กฎที่ห้ามละเมิด · path ที่เสี่ยงสูง · โฟลเดอร์รายงาน) อ่านจากหัวข้อ **"Card workflow"** ใน `CLAUDE.md`
+Project-specific values (build/test/typecheck commands, invariants, high-risk paths, handover folder) come from the **"Card workflow"** section of `CLAUDE.md`.
 
-## ขั้น 0 — ประเมินความเสี่ยงก่อนเริ่ม
+## Step 0 — Assess the risk first
 
-ดู `git diff <main>...HEAD --stat` และ `git log --oneline <main>..HEAD` แล้วเช็ค:
+Look at `git diff <main>...HEAD --stat` and `git log --oneline <main>..HEAD`, then check:
 
-| เกณฑ์ | เช็คยังไง |
+| Criterion | How to check |
 |---|---|
-| แตะกฎที่ห้ามละเมิดใน `CLAUDE.md` โดยตรง | ไฟล์ที่แก้อยู่ใน path เสี่ยงสูงที่ `CLAUDE.md` ระบุ |
-| แตะ auth / ข้อมูลส่วนบุคคล / crypto / เงิน | ไฟล์ในส่วนนั้น หรือ field ใหม่ที่เก็บความลับ |
-| แก้ schema/migration ของตารางสำคัญ | diff ของ schema |
-| การ์ดแรกที่วางแพทเทิร์นใหม่ให้การ์ดอื่นทำตาม | สร้างโฟลเดอร์ระดับ feature ใหม่ครั้งแรก |
+| Touches an invariant in `CLAUDE.md` directly | Changed files are in a high-risk path listed in `CLAUDE.md` |
+| Touches auth, personal data, crypto or money | Files in those areas, or a new field that stores secrets |
+| Changes the schema or a migration of an important table | The schema diff |
+| First card to set a new pattern other cards will follow | Creates a new feature-level folder for the first time |
 
-**เข้าเกณฑ์อย่างน้อย 1 ข้อ** → บอกผู้ใช้ว่าเสี่ยงสูงเพราะข้อไหน แนะนำตรวจแบบ dual แล้วถามว่าจะเอาแบบไหน:
-- **`--dual` (subagent)** — เร็วและถูกกว่า แต่ **ไม่อิสระจริง** เพราะ subagent ได้กรอบคิดจาก prompt ของ session นี้ ใช้เป็นการตรวจรอบสองเพิ่มมุมมอง
-- **เปิด session ที่สองเอง** — ผู้ใช้เปิดเทอร์มินัลใหม่ สั่ง `/audit $1` โดยไม่บอกผลจากฝั่งนี้ แล้วค่อยเทียบผลกัน — อิสระจริง เหมาะกับงานที่แตะเงิน/auth/ข้อมูลส่วนบุคคล
+**If at least 1 criterion matches**, tell the user it's high risk and why, recommend a dual audit, and ask which mode they want:
+- **`--dual` (subagent)**: faster and cheaper, but **not truly independent**, because the subagent inherits this session's framing through its prompt. Use it as a second pass for another angle.
+- **Open a second session yourself**: the user opens a new terminal and runs `/audit $1` without sharing this session's results, then compares the two. Truly independent. Best for work that touches money, auth or personal data.
 
-ไม่เข้าเกณฑ์ → ไปขั้น 1 เลย ไม่ต้องถาม
+No criterion matches → go straight to step 1 without asking.
 
-### ถ้าทำ `--dual`
-ทำขั้น 1-5 ในนี้เป็นหลัก (เทคนิคหลัก: **mutation test** — ย้อนโค้ดส่วนที่แก้กลับ แล้วรันเทสต์ซ้ำ ดูว่าเทสต์จับได้จริงไหม)
-พร้อมกันนั้น spawn subagent 1 ตัว:
-> "ตรวจการ์ด $1 มุมเทียบเอกสารต้นทาง — อ่านการ์ดคำต่อคำและเอกสารทุกไฟล์ที่การ์ดอ้างแบบเต็มหัวข้อ หาสิ่งที่การ์ดสั่งแต่รายงานส่งมอบไม่ได้พูดถึงหรือพูดไม่ครบ โดยเฉพาะจุดที่เอกสาร 2 ไฟล์ขัดกัน รายงานเป็น bullet พร้อม ไฟล์:บรรทัด"
+### If running `--dual`
+Do steps 1-5 here as the main audit. The core technique is the **mutation test**: revert the changed code, re-run the tests, and see whether they really catch it.
+At the same time, spawn 1 subagent:
+> "Audit card $1 from the source-docs angle. Read the card word for word, and every doc it references in full sections. Find anything the card requires that the handover report doesn't mention or covers incompletely, especially where two docs conflict. Report as bullets with file:line."
 
-finding ของ subagent ต้อง **verify เองก่อน** จึงใส่ในรายงานได้
+**Verify every subagent finding yourself** before putting it in the report.
 
 <EXTREMELY-IMPORTANT>
-**ห้ามแก้โค้ด** เว้นแต่ผู้ใช้สั่งแยกต่างหากหลังอ่านรายงานแล้ว — ถ้าแก้เอง จะไม่มีใครรู้ว่า agent ทำได้แค่ไหน
-เจอบั๊ก → **เขียนลงรายงาน** ไม่ใช่แก้
+**Don't fix code** unless the user separately asks you to after reading the report. If you fix it yourself, nobody learns what the agent can actually do.
+Found a bug → **write it in the report**, don't fix it.
 
-**ห้ามเชื่อรายงานของ agent** — "ผ่านแล้ว" ไม่ใช่หลักฐาน ทุกข้อต้องมีหลักฐานที่ **คุณรันเอง** หรือ **อ่านจากไฟล์เอง**
+**Don't trust the agent's report.** "It passes" is not evidence. Every item needs evidence that **you ran yourself** or **read from the file yourself**.
 </EXTREMELY-IMPORTANT>
 
 ---
 
-## ขั้น 1 — รวบรวมของที่จะตรวจ
+## Step 1 — Gather what to audit
 
-0. อ่าน **รายงานส่งมอบ** (ค่าเริ่มต้น `docs/handover/$1.md`) — เป็น **คำกล่าวอ้าง** ไม่ใช่หลักฐาน
-   - **ไม่มีไฟล์ = ยังไม่พร้อมตรวจ** บอกผู้ใช้แล้วหยุด
-   - ตาราง "การตัดสินใจที่ทำเอง" ข้อที่ตอบว่า "ไม่มีอะไรจับได้" = จุดที่ต้องตรวจหนักที่สุด
-   - หัวข้อ "เบี่ยงจากแผน" — diff ตรวจเรื่องนี้ไม่ได้ ถามว่าเหตุผลฟังขึ้นไหม และทำให้หลักฐานอ่อนลงไหม
-   - หัวข้อ "ข้อย่อยที่ยังเปิด" — ใช้เป็นจุดเริ่ม แต่เปิดเอกสารซ้ำเองเสมอ
-   - ✅ ทุกข้อต้องสมกับหลักฐาน · DoD 2 ท่อนต้องผ่านทั้งคู่
-   - จดตัวเลขทุกตัวที่ agent อ้าง (จำนวนเทสต์ · ไฟล์ · ตาราง) ไว้เทียบในขั้น 2
-1. ดึงการ์ด — **คัด DoD มาคำต่อคำ** และเทียบกับ DoD ในรายงาน (ไม่ตรง = คัดผิดหรือการ์ดถูกแก้ทีหลัง)
-2. ดู diff: `git log --oneline <main>..HEAD` · `git diff <main>...HEAD --stat`
-3. เปิดเอกสารที่การ์ดอ้าง **จากไฟล์จริง**
-4. เปิด `CLAUDE.md` — กฎที่ห้ามละเมิด และเวอร์ชันที่ปักหมุด
+0. Read the **handover report** (default `docs/handover/$1.md`). It is a **claim**, not evidence.
+   - **No file = not ready for audit.** Tell the user and stop.
+   - Entries in the "decisions I made" table that say "nothing would catch it" are where you audit hardest.
+   - The "deviations from the plan" section: a diff can't show this. Ask whether the reasons hold up, and whether the change weakens the evidence.
+   - The "open sub-items" section: use it as a starting point, but always reopen the docs yourself.
+   - Every ✅ must match its evidence. A two-part DoD item must pass both parts.
+   - Note every number the agent claims (test counts, files, tables) to compare in step 2.
+1. Fetch the card. **Copy the DoD word for word** and compare it with the DoD in the report (a mismatch means it was copied wrong or the card was edited later).
+2. Look at the diff: `git log --oneline <main>..HEAD` and `git diff <main>...HEAD --stat`.
+3. Open the docs the card references **from the real files**.
+4. Open `CLAUDE.md` for the invariants and the pinned versions.
 
-## ขั้น 2 — รันจริง ไม่ใช่อ่านอย่างเดียว
+## Step 2 — Run things, don't just read
 
-รันคำสั่ง build / test / typecheck ตามที่ `CLAUDE.md` กำหนด แล้ว **เก็บ output จริง**
-ถ้าการ์ดแก้ schema/migration: รัน migration บน DB เปล่าบนเครื่อง แล้วดูโครงสร้างจาก DB จริง — ไฟล์ schema เขียนถูกไม่ได้แปลว่า migration สร้างถูก
-🔴 ใช้ DB/สภาพแวดล้อมสำหรับเทสต์เท่านั้น ห้ามรันกับของจริงหรือของที่เสียเงิน
+Run the build / test / typecheck commands defined in `CLAUDE.md` and **keep the real output**.
+If the card changes the schema or a migration, run the migration on an empty local DB and inspect the structure from the real DB. A correct schema file doesn't mean the migration builds it correctly.
+🔴 Use only test databases and environments. Never run against production or anything that costs money.
 
-## ขั้น 3 — ตรวจ 4 ชั้น
+## Step 3 — Audit in 4 layers
 
-### ชั้น 1 · DoD ทีละข้อ
-พิสูจน์ด้วยคำสั่งหรือไฟล์ไม่ได้ = **ไม่ผ่าน** ไม่ใช่ "น่าจะผ่าน"
+### Layer 1 · DoD, item by item
+If a command or a file can't prove it, it **fails**. Not "probably passes".
 
-### ชั้น 2 · กฎที่ห้ามละเมิดใน `CLAUDE.md`
-เช็คทุกข้อทุกครั้ง ไม่ว่าการ์ดจะพูดถึงหรือไม่ · ทำตารางว่าแต่ละกฎตรวจด้วยคำสั่งอะไร
-เช็คด้วยว่าไม่มีใครอัปเวอร์ชันที่ปักหมุดไว้ (ดู diff ของ lockfile)
+### Layer 2 · The invariants in `CLAUDE.md`
+Check every one, every time, whether or not the card mentions it. Make a table of which command checks each invariant.
+Also check that nobody bumped a pinned version (look at the lockfile diff).
 
-### ชั้น 3 · ของที่การ์ดไม่ได้บอก แต่เอกสารบอก
-เทียบงานกับ **เอกสารต้นทาง** โดยตรง ไม่ใช่เทียบกับการ์ด — เอกสารอาจถูกแก้แล้วแต่การ์ดยังเป็นฉบับเก่า
-> ตัวอย่าง: การ์ดบอก 17 ตาราง แต่แผนภาพข้อมูลมี 18 เพราะมีตารางเพิ่มทีหลังโดยไม่มีใครแก้การ์ด
+### Layer 3 · What the card doesn't say but the docs do
+Compare the work against the **source docs** directly, not against the card. The docs may have been updated while the card is still the old version.
+> Example: the card says 17 tables, but the data diagram has 18 because a table was added later and nobody updated the card.
 
-### ชั้น 4 · รายงานเกินจริงไหม
+### Layer 4 · Is the report overstated?
 
-| agent อ้างว่า | วัดได้จริง | ตรงไหม |
+| Agent claims | Actually measured | Match? |
 |---|---|---|
-| จำนวนเทสต์ที่ผ่าน | | |
-| ไฟล์ที่แตะ (เทียบ `git diff --name-only`) | | |
+| Number of passing tests | | |
+| Files touched (compare with `git diff --name-only`) | | |
 
-ตัวเลขไม่ตรงแม้ตัวเดียว ต้องหาสาเหตุก่อนสรุป อย่าปัดว่า "ใกล้เคียง"
+If even one number doesn't match, find out why before concluding. Don't wave it off as "close enough".
 
-สัญญาณอื่น:
-- ✅ ข้อที่ทำแค่บางส่วน
-- เทสต์ที่ไม่ได้ทดสอบอะไร (assert ค่าคงที่ · mock ทุกอย่าง · ไม่มี assertion)
-- เพิ่ม `skip` / `todo` / `only`
-- ลดความเข้มของ type checker หรือใส่ `any` / `@ts-ignore` (หรือเทียบเท่าในภาษานั้น) เพื่อให้ผ่าน
-- แตะไฟล์นอกขอบเขตการ์ด
+Other signs:
+- ✅ on items that were only partly done
+- Tests that test nothing (assert constants, mock everything, no assertions)
+- Added `skip` / `todo` / `only`
+- A loosened type checker, or `any` / `@ts-ignore` (or the language's equivalent) added to make things pass
+- Files touched outside the card's scope
 
-## ขั้น 4 — เรื่องที่ต้องให้ผู้ใช้ตัดสิน
+## Step 4 — What the user must decide
 
-**หยุดแล้วถาม ห้ามตัดสินเอง** ถ้า
-- งานชนเรื่องที่ธุรกิจ/กฎหมายยังไม่ตัดสิน
-- เอกสารกับการ์ดขัดกันและไม่ชัดว่าอันไหนถูก
-- agent ตีความ requirement ต่างจากคุณ แต่ของเขาก็ไม่ผิดชัดๆ
+**Stop and ask. Don't decide yourself** if:
+- The work runs into something business or legal hasn't decided yet
+- The docs and the card conflict and it's unclear which is right
+- The agent interpreted the requirement differently from you, but theirs isn't clearly wrong
 
-## ขั้น 5 — รายงาน
+## Step 5 — Report
 
 ```
-# ตรวจ $1 — <ผ่าน ✅ / ต้องแก้ก่อน ❌>
+# Audit $1 — <pass ✅ / needs fixes ❌>
 
-โหมด: <single-pass / dual (subagent) / dual (สอง session)>
+Mode: <single-pass / dual (subagent) / dual (two sessions)>
 
 ## DoD
-| # | ข้อความจากการ์ด (คำต่อคำ) | ผล | หลักฐาน |
+| # | Text from the card (word for word) | Result | Evidence |
 |---|---|---|---|
 
-## กฎที่ห้ามละเมิด
-| กฎ | ผล | ตรวจด้วย |
+## Invariants
+| Invariant | Result | Checked with |
 |---|---|---|
 
-## 🔴 ต้องแก้ก่อนปิดการ์ด
-<อะไรผิด · ทำไมเป็นปัญหา · ไฟล์:บรรทัด · จะพังเมื่อไหร่ถ้าปล่อยไว้>
+## 🔴 Must fix before closing the card
+<what's wrong · why it matters · file:line · when it breaks if left as is>
 
-## 🟡 ข้อสังเกต — ไม่บล็อก
+## 🟡 Observations — not blocking
 
-## ❓ ต้องให้ผู้ใช้ตัดสิน
-<ไม่มีให้เขียนว่า "ไม่มี">
+## ❓ For the user to decide
+<if nothing, write "none">
 
-## คำสั่งที่รันจริง
-<ลิสต์ + ผลย่อ ให้ตรวจซ้ำได้>
+## Commands actually run
+<list + short results, so anyone can re-check>
 ```
 
-**กฎการให้ผล**
-- ❌ ข้อเดียว = **ยังไม่ผ่าน** ไม่มี "เกือบครบ"
-- พิสูจน์ไม่ได้ = ❌
-- ⚠️ ใช้กับ "ถูกตาม DoD แต่มีเรื่องต้องรู้" เท่านั้น ไม่ใช่ที่ซ่อนของผิด
-- **ห้ามเปลี่ยนสถานะการ์ดเอง** — ให้ผู้ใช้เป็นคนกด
+**Rules for the verdict**
+- One ❌ = **not passed**. There is no "almost done".
+- Unprovable = ❌
+- Use ⚠️ only for "correct per the DoD, but there's something you should know". Never to hide something wrong.
+- **Don't change the card's status yourself.** Leave that to the user.

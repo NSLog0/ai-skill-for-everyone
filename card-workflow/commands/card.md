@@ -1,91 +1,91 @@
 ---
-description: เริ่มทำงานการ์ด (ticket) แบบตรวจสอบได้ — หยุดรออนุมัติก่อนเขียนโค้ด
+description: Work a card (ticket) in an auditable way — stop for approval before writing code
 argument-hint: PROJ-123
 ---
 
-ทำงานการ์ด **$1** ตามขั้นตอนด้านล่าง **ห้ามข้ามขั้น ห้ามสลับลำดับ**
+Work card **$1** using the steps below. **Do not skip steps or change their order.**
 
-ค่าเฉพาะโปรเจกต์ (ที่อยู่ระบบการ์ด · คำสั่ง build/test · กฎที่ห้ามละเมิด · เอกสารไหนเป็นความจริง · โฟลเดอร์รายงาน) อ่านจากหัวข้อ **"Card workflow"** ใน `CLAUDE.md` ของโปรเจกต์
-ถ้าไม่มีหัวข้อนั้น ให้ถามผู้ใช้ก่อนเริ่ม อย่าเดา
+Project-specific values come from the **"Card workflow"** section of the project's `CLAUDE.md`: card tracker, build/test commands, invariants, which docs are the source of truth, and the handover folder.
+If that section is missing, ask the user before starting. Don't guess.
 
 ---
 
-## ขั้น 1 — อ่านการ์ด
+## Step 1 — Read the card
 
-ดึง `$1` จากระบบการ์ดที่ `CLAUDE.md` ระบุ (เช่น Jira / Linear / GitHub Issues ผ่าน MCP หรือ CLI)
-ถ้าดึงเองไม่ได้ ให้ขอให้ผู้ใช้ paste เนื้อหาการ์ดมา
-อ่าน description, acceptance criteria, DoD และการ์ดที่ link ไว้ให้ครบ
+Fetch `$1` from the tracker named in `CLAUDE.md`, e.g. Jira, Linear or GitHub Issues, through MCP or a CLI.
+If you can't fetch it, ask the user to paste the card.
+Read the description, the acceptance criteria, the DoD and the linked cards in full.
 
-## ขั้น 2 — เปิดเฉพาะเอกสารที่การ์ดอ้างถึง
+## Step 2 — Open only the docs the card references
 
-**อย่าอ่านโฟลเดอร์เอกสารทั้งหมด** — เปิดเฉพาะไฟล์และหัวข้อที่การ์ดพูดถึง
-ถ้าการ์ดไม่ได้อ้างเอกสาร ให้ใช้ตาราง "เอกสารไหนเป็นความจริงเรื่องอะไร" ใน `CLAUDE.md`
-ถ้า `CLAUDE.md` บอกว่าเรื่องไหนต้องเปิด skill เฉพาะก่อน ให้เปิดก่อนเขียนโค้ด
+**Don't read the whole docs folder.** Open only the files and sections the card mentions.
+If the card cites no docs, use the "which doc is the source of truth" table in `CLAUDE.md`.
+If `CLAUDE.md` says a topic needs a specific skill, load that skill before writing code.
 
-## ขั้น 3 — 🛑 หยุด แล้วเสนอแผนก่อนเขียนโค้ดบรรทัดแรก
+## Step 3 — 🛑 Stop and propose a plan before the first line of code
 
-เสนอตามแบบนี้แล้ว **รอการอนุมัติ** — ห้ามเขียนโค้ดในข้อความเดียวกับที่เสนอ
+Propose in this format, then **wait for approval**. Never write code in the same message as the proposal.
 
 ```
-## $1 — <หัวข้อการ์ด>
+## $1 — <card title>
 
-**จะสร้างอะไร**
-<2-4 บรรทัด · ไฟล์ไหนบ้าง · endpoint/ฟังก์ชันอะไร>
+**What I'll build**
+<2-4 lines: which files, which endpoints or functions>
 
-**กฎที่เกี่ยวข้อง**
-<กฎข้อไหนใน CLAUDE.md เกี่ยว · ต้องระวังอะไรเป็นพิเศษ>
+**Relevant invariants**
+<which rules in CLAUDE.md apply, and what needs extra care>
 
-**เทสต์ที่จะเขียนก่อน**
-<ชื่อเคส รวมเคสที่พิสูจน์ว่ากฎข้างบนไม่ถูกละเมิด>
+**Tests I'll write first**
+<test case names, including cases that prove the invariants above hold>
 
-**⚠️ สิ่งที่การ์ดไม่ได้บอก**
-<จุดที่ต้องเดา · การ์ดขัดกับเอกสาร · เรื่องที่ธุรกิจ/กฎหมายต้องตัดสิน
- ไม่มีให้เขียนว่า "ไม่มี" — ห้ามปล่อยผ่านเงียบๆ>
+**⚠️ What the card doesn't say**
+<places I'd have to guess, conflicts between the card and the docs, anything business or legal must decide.
+ If there are none, write "none". Never skip this silently.>
 ```
 
-**ถ้าเจอเรื่องที่ต้องให้ธุรกิจ/กฎหมาย/เจ้าของงานตัดสินใหม่** (หรือเอกสารเขียนว่า "รอ", "ยังไม่ตัดสิน", ⚠️) → **หยุดที่นี่** ห้ามเลือกทางเองแล้วเดินต่อ
+**If you hit something that business, legal or the work owner must decide**, or a doc says "pending", "undecided" or ⚠️, **stop here**. Don't pick an option yourself and carry on.
 
-## ขั้น 4 — แตก branch แล้วเขียนเทสต์ก่อนโค้ด
+## Step 4 — Branch, then write tests before code
 
-**แตก branch ชื่อเดียวกับการ์ด** — `/audit` ตรวจจาก `git diff <main>...HEAD`
-ถ้าทำบน main ตรงๆ ผู้ตรวจแยกไม่ออกว่าอะไรเป็นงานของการ์ดนี้
+**Create a branch named after the card.** `/audit` reviews `git diff <main>...HEAD`.
+If you work on main directly, the auditor can't tell which changes belong to this card.
 
 ```bash
-git switch -c $1        # เริ่มจาก main ที่สะอาด
+git switch -c $1        # start from a clean main
 ```
 
-- เขียนเทสต์ตามที่เสนอในขั้น 3 · เห็นแดงก่อน แล้วค่อยทำให้เขียว
-- เทสต์ให้พอดีกับความเสี่ยง — ทดสอบพฤติกรรมที่การ์ดเปลี่ยน และกรณีขอบที่ต่างกันจริง ไม่เขียนเคสซ้ำความหมาย
-- **ไม่ขยายขอบเขต** — เจอบั๊กนอกการ์ด ให้จดไว้รายงานในขั้น 5 ไม่แก้เอง
-- เจอเรื่องซับซ้อนที่ขั้น 3 ไม่เห็น → **กลับไปขั้น 3** ไม่ตัดสินใจเองแล้วเดินต่อ
+- Write the tests proposed in step 3. See them fail first, then make them pass.
+- Keep tests proportional to the risk. Test the behaviour the card changes and the edge cases that genuinely differ. Don't write cases that repeat the same meaning.
+- **Don't widen the scope.** If you find a bug outside the card, note it for the step 5 report. Don't fix it.
+- If you hit complexity step 3 didn't foresee, **go back to step 3**. Don't decide on your own and carry on.
 
-## ขั้น 5 — เขียนรายงานส่งมอบเป็นไฟล์
+## Step 5 — Write the handover report as a file
 
-เขียนลงโฟลเดอร์รายงานที่ `CLAUDE.md` กำหนด (ค่าเริ่มต้น `docs/handover/$1.md`) ตามแม่แบบ `HANDOVER_TEMPLATE.md`
+Write it to the handover folder named in `CLAUDE.md` (default `docs/handover/$1.md`), using the `HANDOVER_TEMPLATE.md` template.
 
-**ไม่ใช่รายงานในแชท** — ผู้ตรวจอ่านไฟล์นี้ ไม่ได้อ่านแชท
+**Not a chat message.** The auditor reads this file, not the chat.
 
-- **DoD ทุกข้อต้องมีคำสั่งที่ผู้ตรวจ copy ไปรันแล้วได้ผลเดิม** — "ผ่านแล้ว" ไม่ใช่หลักฐาน · พิสูจน์ด้วยคำสั่งไม่ได้ ให้อ้าง `ไฟล์:บรรทัด`
-- **ห้ามใส่ ✅ แล้วอธิบายว่า "เกือบครบ"** — ไม่ครบคือ ❌ · ตรวจไม่ได้คือ ⚠️ พร้อมเหตุผล
-  DoD ข้อเดียวที่มี 2 ท่อน ต้องผ่านทั้งคู่ถึงจะ ✅
-- มีเทสต์แดง ให้แสดง output จริง
-- ช่อง **"ถ้าเลือกผิดจะรู้ได้ยังไง"** — ถ้าคำตอบคือ "ไม่มีอะไรจับได้" ให้เขียนตรงๆ
-- **เบี่ยงจากแผนขั้น 3** — ไล่แผนที่อนุมัติทีละข้อ เปลี่ยนอะไรต้องบอก (diff แสดงสิ่งที่ไม่ได้ทำไม่ได้)
-- **ข้อย่อยที่ยังเปิดในเอกสารต้นทาง** — อ่านทั้งหัวข้อที่การ์ดอ้าง ไม่ใช่แค่ท่อนที่ยกมา
-- หัวข้อที่ไม่มีเนื้อหา เขียนว่า **"ไม่มี"** ห้ามลบหัวข้อ
+- **Every DoD item needs a command the auditor can copy, run, and get the same result.** "It passes" is not evidence. If a command can't prove it, cite `file:line`.
+- **Never mark ✅ and then explain it's "almost done".** Incomplete is ❌. Unverifiable is ⚠️, with the reason.
+  A DoD item with two parts is ✅ only when both pass.
+- If any test fails, show the real output.
+- In the **"if this choice is wrong, how would we know"** column, if the answer is "nothing would catch it", say so plainly.
+- **Deviations from the step 3 plan:** go through the approved plan item by item and say what changed. A diff can't show what you didn't do.
+- **Open sub-items in the source docs:** read the whole section the card cites, not just the quoted part.
+- If a section has no content, write **"none"**. Never delete a section.
 
-⚠️ รายงานนี้คือ **คำกล่าวอ้างที่รอพิสูจน์** — ผู้ตรวจจะรันซ้ำทุกข้อ
+⚠️ This report is a **claim waiting to be proven**. The auditor will re-run every item.
 
-## ขั้น 6 — commit ไว้ให้ตรวจ
+## Step 6 — Commit for review
 
-commit งาน **พร้อมไฟล์รายงาน** ลง branch ของการ์ด · ข้อความ commit บอกว่าทำอะไรและทำไม
-แล้วบอกผู้ใช้ว่าพร้อมให้ตรวจด้วย `/audit $1`
+Commit the work **together with the report file** to the card's branch. The commit message says what changed and why.
+Then tell the user it is ready for `/audit $1`.
 
 ---
 
-## ยังไม่ต้องทำ (เว้นแต่ถูกสั่ง)
+## Not yet (unless told to)
 
-- ห้าม push · ห้าม merge · ห้ามสร้าง PR
-- ห้ามแก้ main โดยตรง
-- ห้ามเปลี่ยนสถานะการ์ดเอง
-- ห้ามข้าม git hook
+- Don't push, merge or open a PR
+- Don't change main directly
+- Don't change the card's status
+- Don't bypass git hooks

@@ -1,32 +1,32 @@
-<!-- คัดลอกหัวข้อนี้ไปวางใน CLAUDE.md ของโปรเจกต์ แล้วกรอกให้ครบ — /card /decide /audit อ่านค่าจากที่นี่ -->
+<!-- Copy this section into your project's CLAUDE.md and fill it in. /card /decide /audit read their settings from here. -->
 
 ## Card workflow
 
-| ค่า | ของโปรเจกต์นี้ |
+| Setting | This project |
 |---|---|
-| ระบบการ์ด | เช่น Jira `mycompany.atlassian.net` project `PROJ` (ผ่าน Atlassian MCP) / GitHub Issues `org/repo` (ผ่าน `gh`) |
-| branch หลัก | `main` |
-| build | `npm run build` |
-| test (unit) | `npm test` |
-| test (integration/e2e) | `npm run test:integration` — ใช้ DB สำหรับเทสต์เท่านั้น |
-| typecheck / lint | `npm run typecheck` |
-| โฟลเดอร์รายงานส่งมอบ | `docs/handover/` (แม่แบบ `docs/handover/TEMPLATE.md`) |
+| Card tracker | e.g. Jira `mycompany.atlassian.net` project `PROJ` (via Atlassian MCP) / GitHub Issues `org/repo` (via `gh`) |
+| Main branch | `main` |
+| Build | `npm run build` |
+| Test (unit) | `npm test` |
+| Test (integration/e2e) | `npm run test:integration` — test database only |
+| Typecheck / lint | `npm run typecheck` |
+| Handover folder | `docs/handover/` (template `docs/handover/TEMPLATE.md`) |
 
-### 🔴 กฎที่ห้ามละเมิด
-<!-- ข้อที่ผิดแล้ว "งานเสีย" ไม่ใช่แค่ต้องแก้ · แต่ละข้อบอกด้วยว่าตรวจยังไง -->
-1. <กฎ> — ตรวจด้วย `<คำสั่ง grep/test>`
+### 🔴 Invariants that must never be broken
+<!-- Rules where a violation means the work is broken, not just needing a fix. Say how to check each one. -->
+1. <rule> — check with `<grep/test command>`
 2. …
 
-### path ที่เสี่ยงสูง (audit จะเสนอตรวจแบบ dual)
+### High-risk paths (audit will suggest a dual review)
 - `src/auth/` · `src/payments/` · `migrations/` · …
 
-### เวอร์ชันที่ปักหมุด — ห้ามอัปเอง
-| ของ | เวอร์ชัน | อัปแล้วพังยังไง |
+### Pinned versions — don't upgrade on your own
+| Package | Version | What breaks if upgraded |
 |---|---|---|
 
-### เอกสารไหนเป็นความจริงเรื่องอะไร
-| เรื่อง | ไฟล์ |
+### Which doc is the source of truth for what
+| Topic | File |
 |---|---|
 
-### เรื่องที่ยังไม่ตัดสิน — ห้ามเดา
-- <เรื่อง> — รอใคร
+### Open decisions — don't guess
+- <topic> — waiting on whom

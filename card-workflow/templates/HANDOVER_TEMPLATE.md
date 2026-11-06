@@ -1,79 +1,79 @@
-# <CARD-ID> — <หัวข้อการ์ด>
+# <CARD-ID> — <card title>
 
 | | |
 |---|---|
 | branch | `<CARD-ID>` |
-| commit | `<sha สั้น>` |
-| วันที่ | `YYYY-MM-DD` |
-| ผู้ทำ | agent / คน |
+| commit | `<short sha>` |
+| date | `YYYY-MM-DD` |
+| done by | agent / person |
 
 ---
 
 ## 1 · DoD
 
-คัดข้อความจากการ์ด **คำต่อคำ** — ผู้ตรวจจะเทียบกับการ์ดทีละตัวอักษร
+Copy the text from the card **word for word**. The auditor will compare it with the card character by character.
 
-| # | ข้อความจากการ์ด (คำต่อคำ) | อ้างว่า | พิสูจน์ด้วย | ผลที่ได้จริง |
+| # | Text from the card (word for word) | Claimed | Proven by | Actual result |
 |---|---|---|---|---|
-| 1 | | ✅ / ❌ / ⚠️ | `<คำสั่งที่ copy ไปรันได้>` | `<output จริง เฉพาะบรรทัดที่ชี้ขาด>` |
+| 1 | | ✅ / ❌ / ⚠️ | `<command you can copy and run>` | `<real output, only the deciding lines>` |
 
-`✅` พิสูจน์ได้ · `❌` ทำไม่ครบ · `⚠️` ตรวจไม่ได้ในการ์ดนี้ — บอกว่าทำไม และจะตรวจได้เมื่อไหร่
+`✅` proven · `❌` incomplete · `⚠️` can't be verified in this card. Say why, and when it can be verified.
 
 ---
 
-## 2 · การตัดสินใจที่ทำเอง (การ์ดไม่ได้บอก)
+## 2 · Decisions I made (the card didn't say)
 
-| เรื่อง | เลือกอะไร | ทำไม | ถ้าเลือกผิด จะรู้ได้ยังไง |
+| Topic | What I chose | Why | If this choice is wrong, how would we know |
 |---|---|---|---|
-| | | | `<คำสั่ง/เทสต์ที่จะจับได้>` หรือ **"ไม่มีอะไรจับได้"** |
+| | | | `<command/test that would catch it>` or **"nothing would catch it"** |
 
-> ตอบว่า "ไม่มีอะไรจับได้" ได้ — นั่นคือข้อมูลที่ผู้ตรวจต้องรู้มากที่สุด อย่ากลบ
+> "Nothing would catch it" is an acceptable answer. It's the thing the auditor most needs to know. Don't bury it.
 
-### 2.1 · เบี่ยงจากแผนที่เสนอตอนขั้น 3
+### 2.1 · Deviations from the plan proposed in step 3
 
-| เสนอไว้ว่าจะทำ | สุดท้ายทำอะไร | ทำไมเปลี่ยน |
+| Planned to do | What I actually did | Why it changed |
 |---|---|---|
 | | | |
 
-> diff เห็นแค่สิ่งที่ทำ ไม่เห็นสิ่งที่บอกว่าจะทำแล้วไม่ได้ทำ · ทำครบให้เขียน **"ทำตามแผนครบ ไม่มีเบี่ยง"**
+> A diff shows only what was done, not what was promised and skipped. If you did everything, write **"Followed the plan fully, no deviations"**.
 
 ---
 
-## 3 · ไฟล์ที่แตะ
+## 3 · Files touched
 
-| ไฟล์ | ใหม่/แก้ | ทำอะไร |
+| File | New/changed | What it does |
 |---|---|---|
 | | | |
 
 ---
 
-## 4 · คำสั่งที่รันแล้วได้ผลนี้จริง
+## 4 · Commands that actually produced these results
 
-ผู้ตรวจ copy ทั้งบล็อกไปรันแล้วต้องได้ผลเดิม · ต้องเตรียมอะไรก่อนให้ใส่ด้วย
+The auditor copies this whole block, runs it, and must get the same results. Include any setup needed first.
 
 ```bash
-# <คำสั่ง>                    # <ผลที่ได้>
+# <command>                    # <result>
 ```
 
 ---
 
-## 5 · เจอระหว่างทางแต่ไม่ได้แก้
+## 5 · Found along the way but not fixed
 
-บั๊กนอกขอบเขต · เอกสารขัดกัน · เรื่องที่ควรเป็นการ์ดใหม่ — **ไม่มีให้เขียนว่า "ไม่มี"**
+Bugs out of scope · conflicting docs · things that should be new cards. **If there are none, write "none".**
 
 ---
 
-## 6 · ที่ยังตอบไม่ได้ / ต้องให้เจ้าของงานตัดสิน
+## 6 · Still unanswered / needs the work owner's decision
 
-**ไม่มีให้เขียนว่า "ไม่มี"**
+**If there are none, write "none".**
 
-### 6.1 · เอกสารต้นทางมีข้อย่อยที่ยังเปิดอยู่ไหม
+### 6.1 · Do the source docs have open sub-items?
 
-อ่านทั้งหัวข้อที่การ์ดอ้าง — หัวข้อที่ตัดสินแล้วอาจมีข้อย่อยที่ยังเปิด
-มองหา "ยังไม่ได้คุย" · "รอ" · "ต้องตัดสินพร้อมกัน" · `⚠️`
+Read the whole section the card cites. A decided section may still contain open sub-items.
+Look for "not discussed yet" · "pending" · "must decide together" · `⚠️`
 
-| เอกสาร:หัวข้อ | ข้อย่อยที่ยังเปิด | กระทบการ์ดนี้ไหม |
+| Doc:section | Open sub-item | Affects this card? |
 |---|---|---|
-| | | ไม่ / กระทบแต่ไม่ได้ทำเพราะ… |
+| | | No / Yes but not done because… |
 
-> ไม่พบให้เขียน **"ไล่แล้ว ไม่มีข้อย่อยที่ยังเปิด"** พร้อมบอกว่าเปิดเอกสารไหนบ้าง
+> If none are found, write **"Checked, no open sub-items"** and list which docs you opened.
