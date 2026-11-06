@@ -53,6 +53,24 @@ Copy [`templates/CLAUDE-card-workflow-section.md`](templates/CLAUDE-card-workflo
 
 Run `/decide` and `/audit` in separate sessions, so the reviewer doesn't share the implementer's framing.
 
+## Audit modes
+
+`/audit` first checks whether the card is high risk: it touches an invariant or high-risk path from `CLAUDE.md`, touches auth, personal data, crypto or money, changes an important table's schema, or is the first card to set a new pattern.
+
+| Mode | When | What it does |
+|---|---|---|
+| **Single-pass** (default) | Card is not high risk, so `/audit` starts without asking | One session reads the handover report as a claim, re-runs the build and tests, checks every DoD item and every invariant, compares the work with the source docs, and looks for overstated numbers or hollow tests. |
+| **`--dual` (subagent)** | High risk, and you want a quick second angle | Everything in single-pass, plus a **mutation test**: revert the changed code and re-run the tests to see whether they really catch it. A subagent also reads the card and the source docs and looks for anything the report missed or covered incompletely. The main session verifies those findings before reporting them. |
+| **Dual (two sessions)** | High risk, and the work touches money, auth or personal data | You open a second terminal and run `/audit PROJ-123` there without sharing the first result. Then you compare the two reports. |
+
+For a high-risk card, `/audit` explains why and asks which mode you want. A low-risk card goes straight to single-pass.
+
+**What single-pass doesn't give you on high-risk work:**
+- **No mutation test, so you can't tell whether the tests really guard the change.** Tests can pass whether or not the change is there.
+- **Only one reader goes through the source docs.** A requirement that the card never mentioned is easier to miss.
+
+**`--dual` is cheaper but not truly independent.** The subagent inherits the main session's framing through its prompt, so both can miss the same thing. Two sessions cost more of your time, but they're the only fully independent check.
+
 ## Notes
 
 - Before using this with company code or data, check your workplace's AI usage policy.
